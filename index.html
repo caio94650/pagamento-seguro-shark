@@ -47,7 +47,7 @@
     <div class="timer" id="timer">Expira em: 05:00</div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script>
     const chave = "sk_49db836e59424b29b28deb931ad31e38";
     const endpoint = "https://api.pagar.me/core/v5/payments";
@@ -81,13 +81,17 @@
     .then(res => res.json())
     .then(data => {
       const codigo = data.pix.qr_code;
-      const imagem = data.pix.qr_code_url;
-
       document.getElementById("codigoPix").innerText = codigo;
-      QRCode.toCanvas(document.getElementById("qrcode"), codigo, { width: 200 });
+
+      new QRCode(document.getElementById("qrcode"), {
+        text: codigo,
+        width: 200,
+        height: 200
+      });
     })
     .catch(err => {
-      document.getElementById("qrcode").innerText = "Erro ao gerar QR Code";
+      document.getElementById("qrcode").innerText = "❌ Erro ao gerar QR Code.";
+      console.error(err);
     });
 
     function copiarPix() {
