@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento Pix</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f1f1f1;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      background: #fff;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    h2 { color: #222; }
+    #qrcode { margin: 20px 0; }
+    button {
+      padding: 10px 20px;
+      background: #3b82f6;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover { background: #2563eb; }
+    .timer {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Pagamento via Pix</h2>
+    <div id="qrcode">Carregando QR Code...</div>
+    <p id="codigoPix">---</p>
+    <button onclick="copiarPix()">📋 Copiar Código Pix</button>
+    <div class="timer" id="timer">Expira em: 05:00</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+  <script>
+    const chave = "sk_49db836e59424b29b28deb931ad31e38";
+    const endpoint = "https://api.pagar.me/core/v5/payments";
+
+    const payload = {
+      amount: 100, // R$ 1,00
+      payment_method: "pix",
+      pix: { expires_in: 300 },
+      customer: {
+        name: "João da Silva",
+        email: "joao@email.com",
+        tax_id: "12345678909"
+      },
+      items: [
+        {
+          name: "Teste Pix",
+          quantity: 1,
+          amount: 100
+        }
+      ]
+    };
+
+    fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Basic ${btoa(chave + ":")}`
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      const codigo = data.pix.qr_code;
+      const imagem = data.pix.qr_code_url;
+
+      document.getElementById("codigoPix").innerText = codigo;
+      QRCode.toCanvas(document.getElementById("qrcode"), codigo, { width: 200 });
+    })
+    .catch(err => {
+      document.getElementById("qrcode").innerText = "Erro ao gerar QR Code";
+    });
+
+    function copiarPix() {
+      const texto = document.getElementById("codigoPix").innerText;
+      navigator.clipboard.writeText(texto);
+      alert("Código Pix copiado!");
+    }
+
+    // Timer de expiração 5min
+    let tempo = 300;
+    const timer = setInterval(() => {
+      tempo--;
+      const min = String(Math.floor(tempo / 60)).padStart(2, '0');
+      const seg = String(tempo % 60).padStart(2, '0');
+      document.getElementById("timer").innerText = `Expira em: ${min}:${seg}`;
+      if (tempo <= 0) clearInterval(timer);
+    }, 1000);
+  </script>
+</body>
+</html>
